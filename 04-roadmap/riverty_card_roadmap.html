@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riverty card roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #EDF0EE;
+  --surface: #FFFFFF;
+  --lane: #E3E8E5;
+  --ink: #1B2420;
+  --muted: #58665F;
+  --line: #CCD5D0;
+  --c-quick: #27774A; --b-quick: #DDEFE3;
+  --c-major: #2C5AA0; --b-major: #E1EAF7;
+  --c-fill:  #8A5A08; --b-fill:  #F6E9CC;
+  --c-sink:  #A93630; --b-sink:  #F7DFDC;
+  --font-head: "Familjen Grotesk", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F1513;
+    --surface: #18211D;
+    --lane: #131B18;
+    --ink: #E7EEEA;
+    --muted: #9DAEA5;
+    --line: #2B3832;
+    --c-quick: #6FCB92; --b-quick: #1B3326;
+    --c-major: #8DB4F0; --b-major: #1B2A44;
+    --c-fill:  #E0B25A; --b-fill:  #3A2E12;
+    --c-sink:  #F0908A; --b-sink:  #44201E;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 15px/1.5 var(--font-body);
+}
+button { font: inherit; color: inherit; }
+button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.page { max-width: 1240px; margin: 0 auto; padding: 36px 24px 56px; }
+
+/* header */
+.top h1 {
+  font: 700 clamp(28px, 3.6vw, 40px)/1.08 var(--font-head);
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.top .sub { margin: 0 0 22px; color: var(--muted); }
+.anchors {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0 0 26px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.anchors div { padding: 14px 18px 14px 0; }
+.anchors div + div { padding-left: 18px; border-left: 1px solid var(--line); }
+.anchors dt { font: 600 13px/1.3 var(--font-head); color: var(--muted); margin-bottom: 4px; }
+.anchors dd { margin: 0; font-size: 14px; line-height: 1.45; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.controls .label { font: 600 13px var(--font-head); color: var(--muted); margin-right: 4px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface);
+  cursor: pointer; font-size: 13px; font-weight: 500;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] .n { color: inherit; opacity: .75; }
+.chip svg { flex: none; }
+.spacer { flex: 1 1 auto; }
+.reset { border: 0; background: none; cursor: pointer; color: var(--muted); text-decoration: underline; font-size: 13px; padding: 6px 4px; }
+.rule { margin: 0 0 22px; color: var(--muted); font-size: 13px; }
+
+/* lanes */
+.lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.lane { background: var(--lane); border-radius: 6px; padding: 0 14px 14px; border-top: 4px solid var(--ink); }
+.lane.next { border-top-color: color-mix(in srgb, var(--ink) 55%, transparent); }
+.lane.later { border-top: 4px dashed color-mix(in srgb, var(--ink) 35%, transparent); }
+.lane-head { padding: 14px 2px 10px; }
+.lane-head .row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.lane-head h2 { margin: 0; font: 700 26px/1.1 var(--font-head); letter-spacing: -0.01em; }
+.lane-head .count { font: 600 13px var(--font-head); color: var(--muted); font-variant-numeric: tabular-nums; }
+.lane-head .when { margin: 2px 0 6px; font-weight: 600; font-size: 14px; }
+.lane-head .note { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.empty { color: var(--muted); font-size: 13px; padding: 14px 4px; }
+
+/* cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--qc);
+  border-radius: 4px;
+  padding: 12px 14px 10px;
+  transition: opacity .15s;
+}
+.card.dim { opacity: .28; }
+.q-quick { --qc: var(--c-quick); --qb: var(--b-quick); }
+.q-major { --qc: var(--c-major); --qb: var(--b-major); }
+.q-fill  { --qc: var(--c-fill);  --qb: var(--b-fill); }
+.q-sink  { --qc: var(--c-sink);  --qb: var(--b-sink); }
+.card h3 { margin: 0 0 6px; font: 600 17px/1.25 var(--font-head); }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--qb); color: var(--qc);
+  font: 600 12px/1 var(--font-head);
+  padding: 5px 9px 5px 7px; border-radius: 3px; margin-bottom: 8px;
+}
+.why { margin: 0 0 10px; font-size: 14px; line-height: 1.45; }
+.scores { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+.scores .m { display: inline-flex; align-items: center; gap: 6px; }
+.dots { display: inline-flex; gap: 3px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--qc); display: block; }
+.dots i.on { background: var(--qc); }
+.actions { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 7px; }
+.more { border: 0; background: none; cursor: pointer; font-size: 13px; font-weight: 500; padding: 3px 0; text-decoration: underline; text-underline-offset: 3px; }
+.mv { display: inline-flex; gap: 4px; }
+.mv button {
+  width: 30px; height: 28px; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 3px; cursor: pointer; font-size: 14px; line-height: 1;
+}
+.mv button:disabled { opacity: .3; cursor: default; }
+.detail { margin-top: 8px; font-size: 13px; line-height: 1.5; }
+.detail p { margin: 0 0 6px; }
+.detail b { font-weight: 600; }
+
+/* cut list */
+.cut { margin-top: 36px; }
+.cut h2 { font: 700 26px/1.1 var(--font-head); letter-spacing: -0.01em; margin: 0 0 4px; }
+.cut > p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.cutgrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cutgrid li {
+  border: 1px dashed var(--line); border-radius: 4px; padding: 12px 14px;
+  background: transparent;
+}
+.cutgrid .t { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.cutgrid h3 { margin: 0; font: 600 16px/1.25 var(--font-head); text-decoration: line-through; text-decoration-thickness: 1.5px; text-decoration-color: var(--muted); }
+.cutgrid .tag { font: 600 12px var(--font-head); color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 2px 6px; white-space: nowrap; }
+.cutgrid p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+
+footer { margin-top: 30px; font-size: 13px; color: var(--muted); max-width: 80ch; }
+
+@media (max-width: 980px) {
+  .lanes { grid-template-columns: 1fr; }
+  .anchors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .anchors div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .anchors div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .cutgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .page { padding: 24px 16px 40px; }
+  .anchors { grid-template-columns: 1fr; }
+  .anchors div, .anchors div + div { padding-left: 0; border-left: 0; }
+  .anchors div + div { border-top: 1px solid var(--line); }
+  .cutgrid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="top">
+  <h1>Riverty card roadmap</h1>
+  <p class="sub">Scored on Effort vs. Value for a team of four. Cards move between lanes with the arrow buttons.</p>
+  <dl class="anchors">
+    <div><dt>Persona</dt><dd>Heavy German Riverty users who shop mostly online and use pay-later to receive the goods before paying.</dd></div>
+    <div><dt>Moment of misery</dt><dd>Payment timing and tracking don't follow what they've decided.</dd></div>
+    <div><dt>Primary metric</dt><dd>Share of activated cardholders who make a second card purchase within 30 days of their first.</dd></div>
+    <div><dt>Guardrail</dt><dd>Integrated checkout volume per heavy user at partner merchants. Card spend on the same purchases swaps a 1.54% merchant fee for 0.1% interchange.</dd></div>
+  </dl>
+</header>
+
+<div class="controls" id="filters" role="group" aria-label="Filter by quadrant"></div>
+<p class="rule">High value means 4 or 5. Effort of 3 or more will not fit in one sprint for a team of four. Filtering dims the other cards.</p>
+
+<main>
+  <div class="lanes" id="lanes"></div>
+
+  <section class="cut" aria-labelledby="cut-h">
+    <h2 id="cut-h">Cut List</h2>
+    <p>Ideas left off the roadmap, with the research reason.</p>
+    <ul class="cutgrid" id="cutlist"></ul>
+  </section>
+</main>
+
+<footer>
+  Scores are product judgment, not engineering estimates. Evidence comes from 15 German user interviews and a survey of about 1,000 Riverty users (2023); the 2026 platform, risk and regulatory setup may change what is feasible.
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var QUADS = {
+    quick: { label: "Quick Win",     cls: "q-quick", shape: "circle" },
+    major: { label: "Major Project", cls: "q-major", shape: "square" },
+    fill:  { label: "Fill-In",       cls: "q-fill",  shape: "diamond" },
+    sink:  { label: "Time Sinker",   cls: "q-sink",  shape: "triangle" }
+  };
+
+  var LANES = [
+    { id: "now",   name: "Now",   when: "3-week sprint",
+      note: "Team of four. Baseline, not scored: card purchase list and instant card block from the deck's MVP." },
+    { id: "next",  name: "Next",  when: "Following 1 to 2 sprints",
+      note: "Work starts here. The Major Projects will likely run past two sprints." },
+    { id: "later", name: "Later", when: "Backlog",
+      note: "Parked Time Sinkers. Revisit once pilot data shows repeat use." }
+  ];
+
+  var FEATURES = [
+    { id: 8, lane: "now", name: "Due-date reminders with one-tap actions", q: "quick", v: 4, e: 2,
+      why: "It goes straight at 'tracking doesn't follow what they've decided' and reuses Riverty's existing invoice and payment flows.",
+      ev: "Participants worry about forgetting payments. One wanted the app to remember due dates and pay automatically, and others liked choosing a payment date (a 1 euro postponement fee was judged acceptable).",
+      watch: "Show postponement costs up front; participants asked what deferring costs." },
+    { id: 9, lane: "now", name: "Trust and transparency page", q: "quick", v: 4, e: 1,
+      why: "It answers the recurring 'who is Riverty' and SCHUFA objections for days of engineering, provided legal and risk confirm what the card reports.",
+      ev: "Participants repeatedly asked who Riverty is and which bank is behind the card. Fee transparency was called very important.",
+      watch: "Legal and risk must confirm what the card reports before any SCHUFA statement is published. SCHUFA effects were a major worry." },
+    { id: 2, lane: "next", name: "Pay-per-purchase choice", q: "major", v: 5, e: 4,
+      why: "This is the moment of misery itself (payment timing following what the user decided), but it needs a new invoice and risk decision for every card transaction.",
+      ev: "Most preferred single invoices, and the monthly invoice was the least preferred in the survey. Choosing direct or deferred payment per purchase was called essential.",
+      watch: "Fold feature 5 (automatic payment under a threshold) in as a setting, and size the per-transaction risk decision first." },
+    { id: 1, lane: "next", name: "Wallet-first onboarding", q: "major", v: 4, e: 3,
+      why: "Nobody reaches a second purchase without an easy first one, but wallet provisioning and biometric bank login depend on issuer and open-banking partners, so it won't fit a single sprint.",
+      ev: "Onboarding was rated very easy, and Apple Pay or Google Pay was seen as sufficient. Participants flagged SMS-code and bank-login problems and suggested Face ID and WhatsApp verification.",
+      watch: "Niche banks must be supported, and users want to know who is behind Riverty before linking a bank account (see the trust page)." },
+    { id: 3, lane: "next", name: "Return-aware payments", q: "major", v: 4, e: 5,
+      why: "It targets the core friction, but an open-loop card has no order-level data, so a true pause needs merchant integration; ship refund-triggered invoice adjustment first.",
+      ev: "Returns scored 1.6 (1 is best). Klarna's pause on returns was praised, though most see easy returns as standard.",
+      watch: "Stage it: refund-triggered invoice adjustment first, a true payment pause only after merchant integration." },
+    { id: 5, lane: "next", name: "Automatic payment under a threshold", q: "fill", v: 3, e: 2,
+      why: "It pushes everyday non-partner spend onto the card without hitting the guardrail, but it overlaps feature 2 and suits the small purchases where pay-later matters least to this persona.",
+      ev: "A majority could imagine dropping their debit card. Users suggested 50 or 100 euro thresholds and asked for custom limits.",
+      watch: "Ships as a setting inside Pay-per-purchase choice, not a separate build. Track whether it pulls partner-merchant purchases onto the card." },
+    { id: 6, lane: "later", name: "Spending overview", q: "sink", v: 3, e: 4,
+      why: "Tracking is half the misery, but the research says it only works if everything goes through the card, which an online-first pilot can't deliver.",
+      ev: "It scored 1.7 and was called a differentiator. Wrong categories would make it useless, and some won't link their bank account.",
+      watch: "Only valuable if most of a user's spend runs through the card." },
+    { id: 7, lane: "later", name: "Real-time balance and limit", q: "sink", v: 3, e: 4,
+      why: "Users want it, but a visible limit forces the credit-limit risk build that the deck says takes at least two quarters.",
+      ev: "Users preferred seeing the total remaining limit over the test-purchase idea.",
+      watch: "Needs the credit-limit risk approach, which the deck estimates at two quarters or more." },
+    { id: 10, lane: "later", name: "Lost-phone and empty-phone safety", q: "sink", v: 3, e: 4,
+      why: "Security was the top dropout reason in the survey (49%), but the bundle mixes a table-stakes instant block with single-use numbers and a physical card that most won't pay for.",
+      ev: "Users asked how to block the card and how to pay when the phone is lost or empty.",
+      watch: "Instant block is part of the MVP baseline. Single-use numbers and a physical backup card are the later part; the paid monthly physical card is cut." },
+    { id: 4, lane: "later", name: "Auto-activated cashback", q: "sink", v: 3, e: 5,
+      why: "It rewards the same-merchant purchases the guardrail penalizes at 0.1% interchange, and it needs a merchant network that a team of four can't build.",
+      ev: "It scored 1.5, the best of ten, and was called the biggest USP. It needs a large, known partner network, and users forget to activate offers.",
+      watch: "Rewards same-merchant spend at 0.1% interchange, which pressures the guardrail." }
+  ];
+
+  var CUTS = [
+    { name: "Consumer credit", tag: "Cut", why: "9 of 10 interviewees wouldn't use it, mainly to avoid debt." },
+    { name: "Test purchase (credit limit)", tag: "Cut", why: "Called cumbersome; users preferred seeing the total remaining limit." },
+    { name: "Exchange-rate lock", tag: "Cut", why: "Used mainly on holidays; the currency converter scored 2.2, a nice-to-have." },
+    { name: "Card personalization", tag: "Cut", why: "Card design was irrelevant to the vast majority." },
+    { name: "Paid physical card", tag: "Cut", why: "Two thirds wouldn't pay the 2.50 euro monthly fee, and 6 of 15 don't need one." },
+    { name: "Peer-to-peer", tag: "Parked", why: "Scored 1.9, but it depends on coverage among users and on funding from the bank account." }
+  ];
+
+  var STORE_KEY = "riverty-roadmap-lanes-v1";
+  var filter = "all";
+  var open = {};
+
+  function loadLanes() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      if (saved) FEATURES.forEach(function (f) { if (saved[f.id]) f.lane = saved[f.id]; });
+    } catch (e) {}
+  }
+  function saveLanes() {
+    try {
+      var m = {}; FEATURES.forEach(function (f) { m[f.id] = f.lane; });
+      localStorage.setItem(STORE_KEY, JSON.stringify(m));
+    } catch (e) {}
+  }
+  var DEFAULT = {}; FEATURES.forEach(function (f) { DEFAULT[f.id] = f.lane; });
+
+  function icon(shape) {
+    var s = '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><g fill="currentColor">';
+    if (shape === "circle") s += '<circle cx="5" cy="5" r="4.2"/>';
+    if (shape === "square") s += '<rect x="1" y="1" width="8" height="8" rx="1"/>';
+    if (shape === "diamond") s += '<polygon points="5,0.5 9.5,5 5,9.5 0.5,5"/>';
+    if (shape === "triangle") s += '<polygon points="5,0.8 9.6,9 0.4,9"/>';
+    return s + '</g></svg>';
+  }
+  function dots(n, label) {
+    var h = '<span class="dots" role="img" aria-label="' + label + ' ' + n + ' of 5">';
+    for (var i = 1; i <= 5; i++) h += '<i class="' + (i <= n ? "on" : "") + '"></i>';
+    return h + '</span>';
+  }
+
+  function renderFilters() {
+    var el = document.getElementById("filters");
+    var h = '<span class="label">Quadrant</span>';
+    h += '<button class="chip" data-f="all" aria-pressed="' + (filter === "all") + '">All <span class="n">' + FEATURES.length + '</span></button>';
+    Object.keys(QUADS).forEach(function (k) {
+      var n = FEATURES.filter(function (f) { return f.q === k; }).length;
+      h += '<button class="chip q ' + QUADS[k].cls + '" data-f="' + k + '" aria-pressed="' + (filter === k) + '">' +
+           '<span style="color:var(--qc);display:inline-flex">' + icon(QUADS[k].shape) + '</span>' +
+           QUADS[k].label + ' <span class="n">' + n + '</span></button>';
+    });
+    h += '<span class="spacer"></span><button class="reset" id="reset">Reset layout</button>';
+    el.innerHTML = h;
+  }
+
+  function cardHTML(f, idx, len) {
+    var q = QUADS[f.q];
+    var dim = filter !== "all" && filter !== f.q ? " dim" : "";
+    var expanded = !!open[f.id];
+    return '<li class="card ' + q.cls + dim + '" data-id="' + f.id + '">' +
+      '<h3>' + f.name + '</h3>' +
+      '<span class="badge">' + icon(q.shape) + q.label + '</span>' +
+      '<p class="why">' + f.why + '</p>' +
+      '<div class="scores"><span class="m">Value ' + dots(f.v, "Value") + ' ' + f.v + '</span>' +
+      '<span class="m">Effort ' + dots(f.e, "Effort") + ' ' + f.e + '</span></div>' +
+      '<div class="actions">' +
+        '<button class="more" data-more="' + f.id + '" aria-expanded="' + expanded + '">' + (expanded ? "Hide details" : "Details") + '</button>' +
+        '<span class="mv">' +
+          '<button data-mv="-1" data-id="' + f.id + '" aria-label="Move ' + f.name + ' to an earlier lane"' + (f.lane === "now" ? " disabled" : "") + '>&larr;</button>' +
+          '<button data-mv="1" data-id="' + f.id + '" aria-label="Move ' + f.name + ' to a later lane"' + (f.lane === "later" ? " disabled" : "") + '>&rarr;</button>' +
+        '</span>' +
+      '</div>' +
+      '<div class="detail"' + (expanded ? "" : " hidden") + '>' +
+        '<p><b>Evidence.</b> ' + f.ev + '</p>' +
+        '<p><b>Watch-out.</b> ' + f.watch + '</p>' +
+      '</div>' +
+    '</li>';
+  }
+
+  function renderLanes() {
+    var el = document.getElementById("lanes");
+    var h = "";
+    LANES.forEach(function (L) {
+      var items = FEATURES.filter(function (f) { return f.lane === L.id; });
+      h += '<section class="lane ' + L.id + '" aria-labelledby="h-' + L.id + '">' +
+        '<div class="lane-head"><div class="row"><h2 id="h-' + L.id + '">' + L.name + '</h2>' +
+        '<span class="count">' + items.length + (items.length === 1 ? " item" : " items") + '</span></div>' +
+        '<p class="when">' + L.when + '</p><p class="note">' + L.note + '</p></div>';
+      if (items.length) {
+        h += '<ul class="cards">' + items.map(function (f, i) { return cardHTML(f, i, items.length); }).join("") + '</ul>';
+      } else {
+        h += '<p class="empty">Nothing here yet. Move a card in with the arrow buttons.</p>';
+      }
+      h += '</section>';
+    });
+    el.innerHTML = h;
+  }
+
+  function renderCuts() {
+    document.getElementById("cutlist").innerHTML = CUTS.map(function (c) {
+      return '<li><div class="t"><h3>' + c.name + '</h3><span class="tag">' + c.tag + '</span></div><p>' + c.why + '</p></li>';
+    }).join("");
+  }
+
+  function renderAll() { renderFilters(); renderLanes(); }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("button");
+    if (!t) return;
+    if (t.dataset.f) { filter = t.dataset.f; renderAll(); return; }
+    if (t.id === "reset") {
+      FEATURES.forEach(function (f) { f.lane = DEFAULT[f.id]; });
+      open = {}; filter = "all"; saveLanes(); renderAll(); return;
+    }
+    if (t.dataset.more) { open[t.dataset.more] = !open[t.dataset.more]; renderLanes(); focusBtn('[data-more="' + t.dataset.more + '"]'); return; }
+    if (t.dataset.mv) {
+      var f = FEATURES.filter(function (x) { return String(x.id) === t.dataset.id; })[0];
+      var order = ["now", "next", "later"];
+      var i = order.indexOf(f.lane) + parseInt(t.dataset.mv, 10);
+      if (i >= 0 && i < order.length) { f.lane = order[i]; saveLanes(); renderLanes(); focusBtn('[data-mv="' + t.dataset.mv + '"][data-id="' + f.id + '"]'); }
+    }
+  });
+  function focusBtn(sel) { var b = document.querySelector(sel); if (b) b.focus(); }
+
+  loadLanes();
+  renderAll();
+  renderCuts();
+})();
+</script>
+</body>
+</html>
