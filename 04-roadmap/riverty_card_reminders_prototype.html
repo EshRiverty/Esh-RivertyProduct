@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riverty Card: due-date reminders prototype</title>
+<style>
+:root {
+  --ink: #1B2420; --muted: #5C6A63; --line: #D5DDD8; --bg: #ECEFED;
+  --green: #2F6B3E; --green-soft: #E1EEE4;
+  --amber: #8A5A08; --amber-soft: #F6E9CC;
+  --red: #A93630; --red-soft: #F7DFDC;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, "Segoe UI", Roboto, sans-serif; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid #1B6FD1; outline-offset: 2px; }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 40px; display: grid; grid-template-columns: 360px 1fr; gap: 32px; align-items: start; }
+header.page { grid-column: 1 / -1; }
+header.page h1 { margin: 0 0 2px; font-size: 22px; }
+header.page p { margin: 0; color: var(--muted); font-size: 14px; }
+
+/* phone */
+.phonecol { display: flex; flex-direction: column; align-items: center; }
+.phone { width: 340px; height: 660px; background: #fff; border: 10px solid #101412; border-radius: 38px; overflow: hidden; position: relative; }
+.cap { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); text-align: center; max-width: 320px; }
+.screen { height: 100%; display: flex; flex-direction: column; }
+
+/* screen 1: lock screen */
+.lock { background: linear-gradient(170deg, #1d3a2a, #0e1713 70%); color: #fff; padding: 46px 14px 14px; }
+.lock-time { font-size: 62px; font-weight: 300; text-align: center; line-height: 1; }
+.lock-date { text-align: center; opacity: .8; margin: 6px 0 28px; }
+.none { text-align: center; opacity: .6; margin-top: 60px; }
+.notif { background: rgba(255,255,255,.92); color: var(--ink); border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
+.notif-body { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 12px 14px 8px; }
+.notif-top { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.app-ic { width: 20px; height: 20px; border-radius: 5px; background: var(--green); color: #fff; font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+.app-name { font-weight: 600; letter-spacing: .02em; }
+.when { margin-left: auto; }
+.notif-title { font-weight: 700; }
+.notif-text { font-size: 14px; }
+.notif-actions { display: flex; border-top: 1px solid var(--line); }
+.notif-actions button { flex: 1; padding: 11px 6px; background: none; border: 0; font-weight: 600; color: var(--green); }
+.notif-actions button + button { border-left: 1px solid var(--line); }
+
+/* screen 2 and 3 */
+.app { background: #fff; position: relative; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 40px 12px 8px; border-bottom: 1px solid var(--line); }
+.back { background: none; border: 0; color: var(--green); font-weight: 600; padding: 6px 4px; min-width: 64px; text-align: left; }
+.tb-title { font-weight: 700; }
+.topbar span:last-child { min-width: 64px; }
+.banner { margin: 12px 14px 0; padding: 10px 12px; background: var(--red-soft); color: var(--red); border-radius: 8px; font-size: 14px; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.banner button { background: var(--red); color: #fff; border: 0; border-radius: 6px; padding: 6px 10px; font-weight: 600; white-space: nowrap; }
+.notice { margin: 12px 14px 0; padding: 10px 12px; background: var(--amber-soft); color: var(--amber); border-radius: 8px; font-size: 14px; }
+.inv { padding: 18px 18px 8px; }
+.chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.chip.unpaid { background: var(--amber-soft); color: var(--amber); }
+.chip.paid { background: var(--green-soft); color: var(--green); }
+.merchant { margin-top: 12px; font-size: 18px; font-weight: 600; }
+.amount { font-size: 44px; font-weight: 700; line-height: 1.1; margin: 2px 0; }
+.due { color: var(--muted); margin-bottom: 14px; }
+.row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.row span { color: var(--muted); }
+.primary { margin: auto 18px 22px; padding: 14px; background: var(--green); color: #fff; border: 0; border-radius: 12px; font-weight: 700; font-size: 16px; }
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; }
+.sheet { background: #fff; width: 100%; border-radius: 20px 20px 0 0; padding: 18px 18px 22px; }
+.sheet h2 { margin: 0 0 2px; font-size: 18px; }
+.sheet .sim { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.sheet .big { font-size: 30px; font-weight: 700; }
+.sheet .notice { margin: 8px 0 0; }
+.sheet .primary { margin: 14px 0 8px; width: 100%; }
+.ghost { width: 100%; background: none; border: 1px solid var(--line); border-radius: 12px; padding: 11px; font-weight: 600; }
+
+.success { align-items: center; text-align: center; padding: 70px 22px 22px; }
+.check { width: 74px; height: 74px; border-radius: 50%; background: var(--green-soft); color: var(--green); display: grid; place-items: center; font-size: 40px; font-weight: 700; }
+.success h2 { margin: 14px 0 0; font-size: 26px; }
+.success .amount { font-size: 34px; }
+.success .meta { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.success .stop { margin: 18px 0; padding: 10px 12px; background: var(--green-soft); color: var(--green); border-radius: 8px; font-weight: 600; font-size: 14px; }
+.success .primary { width: 100%; margin: auto 0 0; }
+
+/* dev panel */
+.dev { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+.dev h2 { margin: 0; font-size: 17px; }
+.dev .sub { margin: 2px 0 12px; color: var(--muted); font-size: 13px; }
+.dev h3 { margin: 14px 0 6px; font-size: 13px; color: var(--muted); }
+.sc { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+.sc button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.try { margin-top: 12px; padding: 10px 12px; background: #F4F7F5; border-radius: 8px; font-size: 14px; }
+.try p { margin: 0 0 4px; }
+.res { width: 100%; border-collapse: collapse; font-size: 14px; }
+.res td { padding: 6px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.res td:first-child { color: var(--muted); width: 48%; }
+.ok { color: var(--green); font-weight: 700; }
+.warn { color: var(--amber); font-weight: 700; }
+.bad { color: var(--red); font-weight: 700; }
+.foot { margin-top: 14px; color: var(--muted); font-size: 12.5px; }
+#fallback { padding: 40px; text-align: center; }
+
+@media (max-width: 800px) {
+  .wrap { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="root"><p id="fallback">Loading prototype. It needs an internet connection to load React from cdnjs.</p></div>
+
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+(function () {
+  if (!window.React || !window.ReactDOM) {
+    document.getElementById("fallback").textContent =
+      "React could not be loaded from cdnjs. Open this file with an internet connection.";
+    return;
+  }
+  var useState = React.useState;
+  var h = React.createElement;
+
+  var SOURCE = "Bank account ending 4821";
+  var PAID_AT = "08.10.2026, 09:02";
+
+  function fmt(n) { return "\u20AC" + n.toFixed(2); }
+
+  var FAIL_TEXT = {
+    bio: "Payment not made. Your due date is unchanged.",
+    bank: "Your bank did not accept the payment. Your due date is unchanged.",
+    net: "No connection. Try again."
+  };
+
+  var SCENARIOS = [
+    { id: "happy", group: "happy", label: "Happy path",
+      test: "Tap Pay now on the reminder (2 actions), or tap Open invoice and pay from the invoice screen (3 actions).",
+      expect: "Screen 3 shows Paid and \"No more reminders for this invoice\"." },
+    { id: "two", group: "happy", label: "Two invoices, same day",
+      test: "Open one invoice, go back, then open the other from its own reminder.",
+      expect: "Each reminder opens its own merchant and amount. There is no combined payment." },
+    { id: "paid", group: "happy", label: "Opened after paid",
+      test: "Tap the old reminder, or its Pay now button.",
+      expect: "Invoice shows Paid with no Pay button and no payment sheet." },
+    { id: "past", group: "happy", label: "Past due date",
+      test: "Open the reminder and pay.",
+      expect: "Screen shows \"Was due 05.10.2026\". Pay stays available. No fee or credit wording." },
+    { id: "bio", group: "unhappy", label: "Biometric fails",
+      test: "Tap Pay now, then Confirm. Also try Cancel on the sheet.",
+      expect: "Status stays Unpaid with \"Payment not made. Your due date is unchanged.\" Try again works in 1 tap." },
+    { id: "bank", group: "unhappy", label: "Bank declines",
+      test: "Tap Pay now, then Confirm.",
+      expect: "Banner says the bank did not accept the payment. Status stays Unpaid. Retry only; no postpone or credit offer." },
+    { id: "net", group: "unhappy", label: "No connection",
+      test: "Tap Pay now, then Confirm.",
+      expect: "\"No connection. Try again.\" Invoice unchanged." },
+    { id: "amount", group: "unhappy", label: "Amount changed",
+      test: "Reminder says \u20AC89.90. Tap Pay now.",
+      expect: "Sheet and invoice show \u20AC94.90 with \"Amount updated since your reminder\". Payment uses the on-screen amount only." },
+    { id: "notif", group: "unhappy", label: "Notifications off",
+      test: "Look at the lock screen.",
+      expect: "No reminder is sent and there is no fallback channel." },
+    { id: "missing", group: "unhappy", label: "Merchant missing",
+      test: "Look at the lock screen.",
+      expect: "Fail closed: no reminder is sent for an invoice with a missing field." }
+  ];
+
+  function baseInvoice() {
+    return { id: "A", merchant: "Nordlicht Mode", amount: 89.90, reminderAmount: 89.90,
+             due: "11.10.2026", reminderDue: "11.10.2026", timing: "Due in 3 days",
+             status: "Unpaid", paidAt: null, changed: false };
+  }
+  function build(id) {
+    var a = baseInvoice(), invoices = [a], reminders = ["A"], failure = null;
+    if (id === "two") {
+      var b = baseInvoice(); b.id = "B"; b.merchant = "Hafenbuch"; b.amount = 24.50; b.reminderAmount = 24.50;
+      invoices.push(b); reminders = ["A", "B"];
+    }
+    if (id === "paid") { a.status = "Paid"; a.paidAt = "07.10.2026, 18:40"; }
+    if (id === "past") { a.due = "05.10.2026"; a.reminderDue = "05.10.2026"; a.timing = "Was due 05.10.2026"; }
+    if (id === "bio" || id === "bank" || id === "net") failure = id;
+    if (id === "amount") { a.amount = 94.90; a.changed = true; }
+    if (id === "notif") reminders = [];
+    if (id === "missing") { a.merchant = ""; reminders = []; }
+    return { invoices: invoices, reminders: reminders, failure: failure };
+  }
+  var INIT = build("happy");
+
+  /* ---------- Screen 1: entry point, lock-screen reminder ---------- */
+  function LockScreen(p) {
+    return h("div", { className: "screen lock" },
+      h("div", { className: "lock-time" }, "09:00"),
+      h("div", { className: "lock-date" }, "Thursday, 8 October"),
+      p.reminders.length === 0
+        ? h("p", { className: "none" }, "No notifications")
+        : p.reminders.map(function (id) {
+            var i = p.invoices.filter(function (x) { return x.id === id; })[0];
+            return h("div", { key: id, className: "notif" },
+              h("button", { className: "notif-body", onClick: function () { p.onTap(id, "body"); } },
+                h("div", { className: "notif-top" },
+                  h("span", { className: "app-ic", "aria-hidden": "true" }, "R"),
+                  h("span", { className: "app-name" }, "RIVERTY"),
+                  h("span", { className: "when" }, "now")),
+                h("div", { className: "notif-title" }, "Payment due in 3 days"),
+                h("div", { className: "notif-text" }, i.merchant + ", " + fmt(i.reminderAmount) + ", due " + i.reminderDue)),
+              h("div", { className: "notif-actions" },
+                h("button", { onClick: function () { p.onTap(id, "pay"); } }, "Pay now"),
+                h("button", { onClick: function () { p.onTap(id, "open"); } }, "Open invoice")));
+          })
+    );
+  }
+
+  /* ---------- Screen 2: feature core, invoice detail ---------- */
+  function InvoiceScreen(p) {
+    var inv = p.inv, paid = inv.status === "Paid";
+    var changedNote = "Amount updated since your reminder (was " + fmt(inv.reminderAmount) + ").";
+    return h("div", { className: "screen app" },
+      h("div", { className: "topbar" },
+        h("button", { className: "back", onClick: p.onBack }, "\u2039 Back"),
+        h("span", { className: "tb-title" }, "Invoice"),
+        h("span", null, "")),
+      p.banner ? h("div", { className: "banner", role: "alert" },
+        h("span", null, p.banner.text),
+        p.banner.retry ? h("button", { onClick: p.onRetry }, "Try again") : null) : null,
+      inv.changed && !paid ? h("div", { className: "notice" }, changedNote) : null,
+      h("div", { className: "inv" },
+        h("span", { className: "chip " + (paid ? "paid" : "unpaid") }, inv.status),
+        h("div", { className: "merchant" }, inv.merchant),
+        h("div", { className: "amount" }, fmt(inv.amount)),
+        h("div", { className: "due" }, paid ? "Paid on " + inv.paidAt : inv.timing),
+        h("div", { className: "row" }, h("span", null, "Due date"), h("b", null, inv.due)),
+        h("div", { className: "row" }, h("span", null, "Pay from"), h("b", null, SOURCE))),
+      paid ? null : h("button", { className: "primary", onClick: p.onPay }, "Pay " + fmt(inv.amount) + " now"),
+      p.sheet ? h("div", { className: "scrim" },
+        h("div", { className: "sheet", role: "dialog", "aria-modal": "true", "aria-label": "Confirm payment" },
+          h("h2", null, "Confirm payment"),
+          h("div", { className: "sim" }, "Face ID, simulated by the button below"),
+          h("div", { className: "big" }, fmt(inv.amount)),
+          h("div", { className: "row" }, h("span", null, "Merchant"), h("b", null, inv.merchant)),
+          h("div", { className: "row" }, h("span", null, "Due date"), h("b", null, inv.due)),
+          h("div", { className: "row" }, h("span", null, "Pay from"), h("b", null, SOURCE)),
+          inv.changed ? h("div", { className: "notice" }, changedNote) : null,
+          h("button", { className: "primary", onClick: p.onConfirm }, "Confirm with Face ID"),
+          h("button", { className: "ghost", onClick: p.onCancel }, "Cancel"))) : null
+    );
+  }
+
+  /* ---------- Screen 3: success, confirmation ---------- */
+  function SuccessScreen(p) {
+    var inv = p.inv;
+    return h("div", { className: "screen app success" },
+      h("div", { className: "check", "aria-hidden": "true" }, "\u2713"),
+      h("h2", null, "Paid"),
+      h("div", { className: "amount" }, fmt(inv.amount)),
+      h("div", { className: "meta" }, inv.merchant),
+      h("div", { className: "meta" }, PAID_AT),
+      h("div", { className: "meta" }, SOURCE),
+      h("div", { className: "stop" }, "No more reminders for this invoice"),
+      h("button", { className: "primary", onClick: p.onDone }, "Done"));
+  }
+
+  /* ---------- Dev panel (not part of the product) ---------- */
+  function Mark(p) { return h("span", { className: p.cls }, p.children); }
+
+  function DevPanel(p) {
+    var sc = SCENARIOS.filter(function (s) { return s.id === p.scenario; })[0];
+    var r = p.lastRun;
+    function group(g, title) {
+      return [h("h3", { key: g + "h" }, title),
+        h("div", { key: g, className: "sc" }, SCENARIOS.filter(function (s) { return s.group === g; }).map(function (s) {
+          return h("button", { key: s.id, "aria-pressed": String(s.id === p.scenario), onClick: function () { p.onPick(s.id); } }, s.label);
+        }))];
+    }
+    var rows = null;
+    if (r) {
+      var actionsOk = r.path === "Pay now" ? (r.actions <= 2) : null;
+      rows = h("table", { className: "res" }, h("tbody", null,
+        h("tr", null, h("td", null, "Scenario"), h("td", null, r.scenario)),
+        h("tr", null, h("td", null, "Path taken"), h("td", null, r.path)),
+        h("tr", null, h("td", null, "User actions to paid"), h("td", null, r.actions + " ",
+          actionsOk === null ? h(Mark, { cls: "warn" }, "(target 2 applies to Pay now)")
+            : actionsOk ? h(Mark, { cls: "ok" }, "\u2713 within 2") : h(Mark, { cls: "bad" }, "over 2"))),
+        h("tr", null, h("td", null, "Reminder tap to paid"), h("td", null, r.seconds.toFixed(1) + " s ",
+          r.seconds <= 10 ? h(Mark, { cls: "ok" }, "\u2713 within 10 s") : h(Mark, { cls: "warn" }, "over 10 s"),
+          h("div", { className: "foot" }, "One run, not a median. Target is a placeholder."))),
+        h("tr", null, h("td", null, "Shown on confirm vs charged"), h("td", null, fmt(r.shown) + " vs " + fmt(r.charged) + " ",
+          r.shown === r.charged ? h(Mark, { cls: "ok" }, "\u2713 match") : h(Mark, { cls: "bad" }, "mismatch"))),
+        h("tr", null, h("td", null, "Reminders left after payment"), h("td", null, r.remindersAfter + " ",
+          r.remindersAfter === 0 ? h(Mark, { cls: "ok" }, "\u2713 none") : h(Mark, { cls: "bad" }, "should be 0")))));
+    }
+    return h("aside", { className: "dev" },
+      h("h2", null, "Prototype controls"),
+      h("p", { className: "sub" }, "Not part of the product. Picking a scenario resets the phone."),
+      group("happy", "Happy paths (4)"),
+      group("unhappy", "Unhappy paths (6)"),
+      h("div", { className: "try" },
+        h("p", null, h("b", null, "Try: "), sc.test),
+        h("p", null, h("b", null, "Expect: "), sc.expect)),
+      h("h3", null, "Last completed payment"),
+      rows || h("p", { className: "sub" }, "No payment yet. Complete one to see the eval checks."),
+      h("p", { className: "foot" }, "Fictional merchants, amounts and account. No payments are made. React 18 via cdnjs, useState only, no storage, no network calls."));
+  }
+
+  /* ---------- App ---------- */
+  function App() {
+    var s1 = useState("happy"), scenario = s1[0], setScenario = s1[1];
+    var s2 = useState("lock"), screen = s2[0], setScreen = s2[1];
+    var s3 = useState(INIT.invoices), invoices = s3[0], setInvoices = s3[1];
+    var s4 = useState(INIT.reminders), reminders = s4[0], setReminders = s4[1];
+    var s5 = useState(INIT.failure), failure = s5[0], setFailure = s5[1];
+    var s6 = useState("A"), activeId = s6[0], setActiveId = s6[1];
+    var s7 = useState(false), sheet = s7[0], setSheet = s7[1];
+    var s8 = useState(null), banner = s8[0], setBanner = s8[1];
+    var s9 = useState(null), run = s9[0], setRun = s9[1];
+    var s10 = useState(null), lastRun = s10[0], setLastRun = s10[1];
+
+    var inv = invoices.filter(function (i) { return i.id === activeId; })[0];
+
+    function start(id) {
+      var b = build(id);
+      setScenario(id); setInvoices(b.invoices); setReminders(b.reminders); setFailure(b.failure);
+      setActiveId("A"); setSheet(false); setBanner(null); setRun(null); setScreen("lock");
+    }
+    function bump() { setRun(function (r) { return r ? { start: r.start, path: r.path, actions: r.actions + 1 } : r; }); }
+
+    function tapReminder(id, mode) {
+      var target = invoices.filter(function (i) { return i.id === id; })[0];
+      setActiveId(id); setBanner(null);
+      setRun({ start: Date.now(), actions: 1, path: mode === "pay" ? "Pay now" : mode === "open" ? "Open invoice" : "Reminder tap" });
+      setScreen("invoice");
+      setSheet(mode === "pay" && target.status === "Unpaid");
+    }
+    function tapPay() { bump(); setBanner(null); setSheet(true); }
+    function retry() { bump(); setBanner(null); setSheet(true); }
+    function cancel() {
+      bump(); setSheet(false);
+      setBanner({ text: FAIL_TEXT.bio, retry: true });
+    }
+    function confirm() {
+      var actions = run.actions + 1;
+      if (failure) {
+        setRun({ start: run.start, path: run.path, actions: actions });
+        setBanner({ text: FAIL_TEXT[failure], retry: true });
+        setFailure(null); setSheet(false);
+        return;
+      }
+      var shown = inv.amount, charged = inv.amount;
+      var left = reminders.filter(function (r) { return r !== inv.id; });
+      setInvoices(invoices.map(function (i) { return i.id === inv.id ? Object.assign({}, i, { status: "Paid", paidAt: PAID_AT }) : i; }));
+      setReminders(left);
+      setRun({ start: run.start, path: run.path, actions: actions });
+      setLastRun({
+        scenario: SCENARIOS.filter(function (s) { return s.id === scenario; })[0].label,
+        path: run.path, actions: actions, seconds: (Date.now() - run.start) / 1000,
+        shown: shown, charged: charged,
+        remindersAfter: left.filter(function (r) { return r === inv.id; }).length
+      });
+      setSheet(false); setBanner(null); setScreen("success");
+    }
+
+    var content;
+    if (screen === "lock") content = h(LockScreen, { reminders: reminders, invoices: invoices, onTap: tapReminder });
+    else if (screen === "invoice") content = h(InvoiceScreen, { inv: inv, banner: banner, sheet: sheet,
+      onBack: function () { setSheet(false); setBanner(null); setScreen("lock"); },
+      onPay: tapPay, onRetry: retry, onConfirm: confirm, onCancel: cancel });
+    else content = h(SuccessScreen, { inv: inv, onDone: function () { start(scenario); } });
+
+    return h("div", { className: "wrap" },
+      h("header", { className: "page" },
+        h("h1", null, "Riverty Card: due-date reminders"),
+        h("p", null, "Working prototype of the PRD (draft). Three screens, one scenario switcher.")),
+      h("div", { className: "phonecol" },
+        h("div", { className: "phone" }, content),
+        h("p", { className: "cap" }, "Screens: 1 lock-screen reminder, 2 invoice detail, 3 confirmation.")),
+      h(DevPanel, { scenario: scenario, lastRun: lastRun, onPick: start }));
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+})();
+</script>
+</body>
+</html>
